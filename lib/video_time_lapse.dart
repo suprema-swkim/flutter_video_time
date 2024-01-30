@@ -59,26 +59,26 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   // ------------------------------------------------
 
   /// 일반 배율
-  int scale = zoomLevel1Scale;
+  double scale = zoomLevel1Scale;
 
   ValueNotifier<double> widgetSizeNotifier = ValueNotifier(zoomLevel1Scale / 10);
 
-  /// 1시간 기준(30)
-  static int zoomLevel1Scale = 30;
+  /// 줌 레벨1 스케일
+  static double zoomLevel1Scale = 30;
 
-  /// 30분 기준(60)
-  final int zoomLevel2Scale = 45;
+  /// 줌 레벨2 스케일
+  final double zoomLevel2Scale = 45;
 
-  /// 10분 기준(180)
-  final int zoomLevel3Scale = 180;
+  /// 줌 레벨3 스케일
+  final double zoomLevel3Scale = 90;
 
   // ------------------------------------------------
 
   /// 최소 줌 스케일
-  int get minScale => zoomLevel1Scale;
+  double get minScale => zoomLevel1Scale;
 
   /// 최대 줌 스케일
-  int get maxScale => zoomLevel3Scale;
+  double get maxScale => zoomLevel3Scale;
 
   bool get isZoomLevel1 => scale < zoomLevel2Scale && scale >= zoomLevel1Scale;
   bool get isZoomLevel2 => scale < zoomLevel3Scale && scale >= zoomLevel2Scale;
@@ -148,14 +148,14 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       if (details.pointerCount == 2) {
                         /// 핀치줌(가로) 사이즈를 줄일때
                         if (details.horizontalScale < 1.0 && scale > minScale) {
-                          scale -= 2;
+                          scale -= 0.5;
                           widgetSizeNotifier.value = scale / 10;
                           return;
                         }
 
                         /// 핀치줌(가로) 사이즈를 늘릴때
                         if (details.horizontalScale > 1.0 && scale < maxScale) {
-                          scale += 2;
+                          scale += 0.5;
                           widgetSizeNotifier.value = scale / 10;
                           return;
                         }

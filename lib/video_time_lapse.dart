@@ -140,7 +140,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                   GestureDetector(
                     onScaleStart: (details) {
                       // 줌 시작 전 위치 저장
-                      focusTimeInSeconds = scrollOffsetToTimeInSeconds();
+                      focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
                     },
                     onScaleUpdate: (details) {
                       /// 핀치줌(가로) 사이즈를 줄일때
@@ -161,14 +161,14 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                     },
                     onScaleEnd: (details) {
                       // 줌 시작 전 위치로 이동
-                      double newOffset = timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
+                      double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
                       videoScrollController.animateTo(newOffset, duration: const Duration(milliseconds: 750), curve: Curves.ease);
                     },
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (scrollNotification) {
                         // 스크롤이 멈췄을때 감지
                         if (scrollNotification is ScrollEndNotification) {
-                          String hhmmss = formatSecondsToHHMMSS(scrollOffsetToTimeInSeconds());
+                          String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
                           widget.timeFocusChanged(hhmmss);
                         }
                         return true;
@@ -208,7 +208,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                         child: SizedBox(
                           width: 20,
                           child: CustomPaint(
-                            painter: PentagonPainter(widget.focusAndTimeTextBackgroundColor),
+                            painter: _TimeLapseFocusHandPainter(widget.focusAndTimeTextBackgroundColor),
                             child: const Center(),
                           ),
                         ),
@@ -322,7 +322,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   }
 
   /// 초(하루) -> 스크롤 위치
-  double timeInSecondsToScrollOffset(double timeInSeconds) {
+  double _timeInSecondsToScrollOffset(double timeInSeconds) {
     // 시간의 최솟값과 최댓값 정의
     double minValue = 0.0;
     double maxValue = videoScrollController.position.maxScrollExtent;
@@ -337,7 +337,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   }
 
   /// 스크롤 위치 -> 초(하루)
-  int scrollOffsetToTimeInSeconds() {
+  int _scrollOffsetToTimeInSeconds() {
     // 현재 스크롤 위치
     double currentOffset = videoScrollController.offset;
 
@@ -356,7 +356,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   }
 
   /// 초 ->  hh:mm:ss 포맷으로 변환
-  String formatSecondsToHHMMSS(int seconds) {
+  String _formatSecondsToHHMMSS(int seconds) {
     int hours = seconds ~/ 3600;
     int minutes = (seconds % 3600) ~/ 60;
     int remainingSeconds = seconds % 60;
@@ -372,14 +372,14 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   void moveVideoTimeFocus(String dateTimeData) {
     DateTime dateTime = DateTime.parse(dateTimeData.replaceAll('.', '-'));
     int seconds = dateTime.hour * 3600 + dateTime.minute * 60 + dateTime.second;
-    double newOffset = timeInSecondsToScrollOffset(seconds.toDouble());
+    double newOffset = _timeInSecondsToScrollOffset(seconds.toDouble());
     videoScrollController.jumpTo(newOffset);
   }
 }
 
-/// 타입랩스 현재 시점 표시 위젯
-class PentagonPainter extends CustomPainter {
-  const PentagonPainter(this.color);
+/// 타입랩스 현재 시점 침 표시 위젯
+class _TimeLapseFocusHandPainter extends CustomPainter {
+  const _TimeLapseFocusHandPainter(this.color);
 
   final Color color;
 

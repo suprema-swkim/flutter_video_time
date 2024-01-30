@@ -59,16 +59,15 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   // ------------------------------------------------
 
   /// 일반 배율
-  late int scale = zoomLevel1Scale;
+  int scale = zoomLevel1Scale;
 
-  /// 실제 배율
-  double get widthSize => scale / 10;
+  ValueNotifier<double> widgetSizeNotifier = ValueNotifier(zoomLevel1Scale / 10);
 
   /// 1시간 기준(30)
-  final int zoomLevel1Scale = 30;
+  static int zoomLevel1Scale = 30;
 
   /// 30분 기준(60)
-  final int zoomLevel2Scale = 60;
+  final int zoomLevel2Scale = 45;
 
   /// 10분 기준(180)
   final int zoomLevel3Scale = 180;
@@ -98,6 +97,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   @override
   void initState() {
     super.initState();
+
     videoScrollController = ScrollController();
     timeScrollController = ScrollController();
     videoScrollController.addListener(() {
@@ -139,24 +139,26 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                 children: [
                   GestureDetector(
                     onScaleStart: (details) {
-                      // 줌 시작 전 위치 저장
-                      focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
+                      if (details.pointerCount == 2) {
+                        // 줌 시작 전 위치 저장
+                        focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
+                      }
                     },
                     onScaleUpdate: (details) {
-                      /// 핀치줌(가로) 사이즈를 줄일때
-                      if (details.horizontalScale < 1.0 && scale > minScale) {
-                        setState(() {
+                      if (details.pointerCount == 2) {
+                        /// 핀치줌(가로) 사이즈를 줄일때
+                        if (details.horizontalScale < 1.0 && scale > minScale) {
                           scale -= 2;
-                        });
-                        return;
-                      }
+                          widgetSizeNotifier.value = scale / 10;
+                          return;
+                        }
 
-                      /// 핀치줌(가로) 사이즈를 늘릴때
-                      if (details.horizontalScale > 1.0 && scale < maxScale) {
-                        setState(() {
+                        /// 핀치줌(가로) 사이즈를 늘릴때
+                        if (details.horizontalScale > 1.0 && scale < maxScale) {
                           scale += 2;
-                        });
-                        return;
+                          widgetSizeNotifier.value = scale / 10;
+                          return;
+                        }
                       }
                     },
                     onScaleEnd: (details) {
@@ -166,7 +168,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                     },
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (scrollNotification) {
-                        // 스크롤이 멈췄을때 감지
+                        // 스크롤이 끝났을때 감지
                         if (scrollNotification is ScrollEndNotification) {
                           String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
                           widget.timeFocusChanged(hhmmss);
@@ -180,23 +182,27 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                         child: Row(
                           children: List.generate(widget.timeList.length, (index) {
                             var item = widget.timeList[index];
-                            return Stack(
-                              children: [
-                                Container(
-                                  width: widthSize,
-                                  color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
-                                ),
-                                if (index % 60 == 0) ...[
-                                  _buildTimeLineHand(30)
-                                ] else if (index % 30 == 0) ...[
-                                  _buildTimeLineHand(20)
-                                ] else if (index % 10 == 0 && (isZoomLevel2 || isZoomLevel3)) ...[
-                                  _buildTimeLineHand(10)
-                                ] else if (index % 2 == 0 && isZoomLevel3) ...[
-                                  _buildTimeLineHand(5)
-                                ]
-                              ],
-                            );
+                            return ValueListenableBuilder(
+                                valueListenable: widgetSizeNotifier,
+                                builder: (context, value, __) {
+                                  return Stack(
+                                    children: [
+                                      Container(
+                                        width: value,
+                                        color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                      ),
+                                      if (index % 60 == 0) ...[
+                                        _buildTimeLineHand(30)
+                                      ] else if (index % 30 == 0) ...[
+                                        _buildTimeLineHand(20)
+                                      ] else if (index % 10 == 0 && (isZoomLevel2 || isZoomLevel3)) ...[
+                                        _buildTimeLineHand(10)
+                                      ] else if (index % 2 == 0 && isZoomLevel3) ...[
+                                        _buildTimeLineHand(5)
+                                      ]
+                                    ],
+                                  );
+                                });
                           }),
                         ),
                       ),
@@ -218,89 +224,96 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                 ],
               ),
             ),
-            if (isZoomLevel1) ...[
-              SingleChildScrollView(
-                controller: timeScrollController,
-                physics: const NeverScrollableScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                child: Container(
-                  width: (widget.timeList.length * widthSize) + constraints.maxWidth,
-                  height: 20,
-                  color: widget.focusAndTimeTextBackgroundColor,
-                  child: Stack(
-                    children: List.generate(24, (index) {
-                      final hour = index;
+            ValueListenableBuilder(
+              valueListenable: widgetSizeNotifier,
+              builder: (context, value, _) {
+                if (isZoomLevel1) {
+                  return SingleChildScrollView(
+                    controller: timeScrollController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: (widget.timeList.length * value) + constraints.maxWidth,
+                      height: 20,
+                      color: widget.focusAndTimeTextBackgroundColor,
+                      child: Stack(
+                        children: List.generate(24, (index) {
+                          final hour = index;
 
-                      return Positioned(
-                        left: (constraints.maxWidth / 2) + (widthSize * 60 * index).toDouble() - 17,
-                        child: Text(
-                          '${hour.toString().padLeft(2, '0')}:00',
-                          style: TextStyle(
-                            color: widget.timeTextColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            ] else if (isZoomLevel2) ...[
-              SingleChildScrollView(
-                controller: timeScrollController,
-                scrollDirection: Axis.horizontal,
-                child: Container(
-                  width: (widget.timeList.length * widthSize) + constraints.maxWidth,
-                  height: 20,
-                  color: widget.focusAndTimeTextBackgroundColor,
-                  child: Stack(
-                    children: List.generate(48, (index) {
-                      final isEvenIndex = index % 2 == 0;
-                      final hour = isEvenIndex ? index : index ~/ 2;
-                      final minute = isEvenIndex ? '00' : '30';
+                          return Positioned(
+                            left: (constraints.maxWidth / 2) + (value * 60 * index).toDouble() - 17,
+                            child: Text(
+                              '${hour.toString().padLeft(2, '0')}:00',
+                              style: TextStyle(
+                                color: widget.timeTextColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  );
+                } else if (isZoomLevel2) {
+                  return SingleChildScrollView(
+                    controller: timeScrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: (widget.timeList.length * value) + constraints.maxWidth,
+                      height: 20,
+                      color: widget.focusAndTimeTextBackgroundColor,
+                      child: Stack(
+                        children: List.generate(48, (index) {
+                          final isEvenIndex = index % 2 == 0;
+                          final minute = isEvenIndex ? '00' : '30';
+                          final hour = index ~/ 2;
 
-                      return Positioned(
-                        left: (constraints.maxWidth / 2) + (widthSize * 30 * index).toDouble() - 17,
-                        child: Text(
-                          '${hour.toString().padLeft(2, '0')}:$minute',
-                          style: TextStyle(
-                            color: widget.timeTextColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            ] else if (isZoomLevel3) ...[
-              SingleChildScrollView(
-                controller: timeScrollController,
-                scrollDirection: Axis.horizontal,
-                child: Container(
-                  width: (widget.timeList.length * widthSize) + constraints.maxWidth,
-                  height: 20,
-                  color: widget.focusAndTimeTextBackgroundColor,
-                  child: Stack(
-                    children: List.generate(144, (index) {
-                      final hour = index ~/ 6;
-                      final minute = (index % 6) * 10;
+                          return Positioned(
+                            left: (constraints.maxWidth / 2) + (value * 30 * index).toDouble() - 17,
+                            child: Text(
+                              '${hour.toString().padLeft(2, '0')}:$minute',
+                              style: TextStyle(
+                                color: widget.timeTextColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  );
+                } else if (isZoomLevel3) {
+                  return SingleChildScrollView(
+                    controller: timeScrollController,
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: (widget.timeList.length * value) + constraints.maxWidth,
+                      height: 20,
+                      color: widget.focusAndTimeTextBackgroundColor,
+                      child: Stack(
+                        children: List.generate(144, (index) {
+                          final hour = index ~/ 6;
+                          final minute = (index % 6) * 10;
 
-                      return Positioned(
-                        left: (constraints.maxWidth / 2) + (widthSize * 10 * index).toDouble() - 17,
-                        child: Text(
-                          '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            color: widget.timeTextColor,
-                            fontSize: 14,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-            ],
+                          return Positioned(
+                            left: (constraints.maxWidth / 2) + (value * 10 * index).toDouble() - 17,
+                            child: Text(
+                              '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                color: widget.timeTextColor,
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ),
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
+              },
+            ),
           ],
         );
       }),

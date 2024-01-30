@@ -34,6 +34,8 @@ class MyApp extends StatelessWidget {
 GlobalKey<VideoTimeLapseState> timeLapseKey = GlobalKey();
 DateTime sampleDateTime = DateTime.parse('2023.01.07 13:39:22'.replaceAll('.', '-'));
 
+Timer? myTimer;
+
 class SamplePage extends StatelessWidget {
   const SamplePage({super.key});
 
@@ -94,6 +96,7 @@ class SamplePage extends StatelessWidget {
             heroTag: 'stop',
             onPressed: () {
               // stop
+              myTimer?.cancel();
             },
             child: const Text('stop'),
           ),
@@ -103,6 +106,7 @@ class SamplePage extends StatelessWidget {
             onPressed: () {
               // 1초당 1번 호출
               Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+                myTimer = timer;
                 sampleDateTime = sampleDateTime.add(const Duration(seconds: 1));
                 String formattedDateTime = DateFormat('yyyy.MM.dd HH:mm:ss').format(sampleDateTime);
                 timeLapseKey.currentState!.moveVideoTimeFocus(formattedDateTime);
@@ -116,6 +120,7 @@ class SamplePage extends StatelessWidget {
             onPressed: () {
               // 1초당 60번 호출
               Timer.periodic(const Duration(milliseconds: 16), (timer) {
+                myTimer = timer;
                 sampleDateTime = sampleDateTime.add(const Duration(seconds: 1));
                 String formattedDateTime = DateFormat('yyyy.MM.dd HH:mm:ss').format(sampleDateTime);
                 timeLapseKey.currentState!.moveVideoTimeFocus(formattedDateTime);
@@ -129,6 +134,7 @@ class SamplePage extends StatelessWidget {
             onPressed: () {
               // 1초당 60번 호출
               Timer.periodic(const Duration(milliseconds: 8), (timer) {
+                myTimer = timer;
                 sampleDateTime = sampleDateTime.add(const Duration(seconds: 1));
                 String formattedDateTime = DateFormat('yyyy.MM.dd HH:mm:ss').format(sampleDateTime);
                 timeLapseKey.currentState!.moveVideoTimeFocus(formattedDateTime);

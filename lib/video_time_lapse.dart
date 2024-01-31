@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class VideoTimeLapse extends StatefulWidget {
   const VideoTimeLapse({
     Key? key,
+    this.height = 160,
     required this.timeList,
     required this.timeFocusChanged,
     required this.previousCallBack,
@@ -14,6 +15,9 @@ class VideoTimeLapse extends StatefulWidget {
     this.timeLineHandColor = Colors.black,
     this.timeTextColor = Colors.white,
   }) : super(key: key);
+
+  /// 높이
+  final double height;
 
   /// 비디오 시간 목록
   final List<bool> timeList;
@@ -59,12 +63,12 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   // ------------------------------------------------
 
   /// 일반 배율
-  double scale = zoomLevel1Scale;
+  late double scale = zoomLevel2Scale;
 
-  ValueNotifier<double> widgetSizeNotifier = ValueNotifier(zoomLevel1Scale / 10);
+  late ValueNotifier<double> widgetSizeNotifier = ValueNotifier(zoomLevel1Scale / 10);
 
   /// 줌 레벨1 스케일
-  static double zoomLevel1Scale = 30;
+  final double zoomLevel1Scale = 30;
 
   /// 줌 레벨2 스케일
   final double zoomLevel2Scale = 45;
@@ -134,7 +138,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
-              height: 80,
+              height: widget.height,
               child: Stack(
                 children: [
                   GestureDetector(
@@ -145,16 +149,20 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       }
                     },
                     onScaleUpdate: (details) {
+                      // 줌 위치 보정
+                      double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
+                      videoScrollController.jumpTo(newOffset);
+
                       if (details.pointerCount == 2) {
                         /// 핀치줌(가로) 사이즈를 줄일때
-                        if (details.horizontalScale < 1.0 && scale > minScale) {
+                        if (details.scale < 1.0 && scale > minScale) {
                           scale -= 0.5;
                           widgetSizeNotifier.value = scale / 10;
                           return;
                         }
 
                         /// 핀치줌(가로) 사이즈를 늘릴때
-                        if (details.horizontalScale > 1.0 && scale < maxScale) {
+                        if (details.scale > 1.0 && scale < maxScale) {
                           scale += 0.5;
                           widgetSizeNotifier.value = scale / 10;
                           return;
@@ -162,9 +170,9 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       }
                     },
                     onScaleEnd: (details) {
-                      // 줌 시작 전 위치로 이동
+                      // 줌 위치 보정
                       double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
-                      videoScrollController.animateTo(newOffset, duration: const Duration(milliseconds: 750), curve: Curves.ease);
+                      videoScrollController.jumpTo(newOffset);
                     },
                     child: NotificationListener<ScrollNotification>(
                       onNotification: (scrollNotification) {

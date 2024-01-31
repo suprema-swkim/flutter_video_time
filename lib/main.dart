@@ -54,22 +54,6 @@ class SamplePage extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 VideoTimeLapse(
-                  timeList: timeList,
-                  focusAndTimeTextBackgroundColor: Colors.green,
-                  timeFocusChanged: (value) {},
-                  previousCallBack: () {},
-                  nextDateCallBack: () {},
-                ),
-                const SizedBox(height: 20),
-                VideoTimeLapse(
-                  timeList: timeList,
-                  focusAndTimeTextBackgroundColor: Colors.blue,
-                  timeFocusChanged: (value) {},
-                  previousCallBack: () {},
-                  nextDateCallBack: () {},
-                ),
-                const SizedBox(height: 20),
-                VideoTimeLapse(
                   key: timeLapseKey,
                   timeList: timeList,
                   timeFocusChanged: (value) {

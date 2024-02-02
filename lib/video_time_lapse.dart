@@ -216,7 +216,13 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                                             children: [
                                               Container(
                                                 width: value,
-                                                color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                                decoration: BoxDecoration(
+                                                  color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                                  border: Border.all(
+                                                    width: 0,
+                                                    color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                                  ),
+                                                ),
                                               ),
                                               if (index % 60 == 0) ...[
                                                 _buildTimeLineHand(30)
@@ -412,6 +418,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
 
   /// 시간에 맞는 위치로 이동
   void moveVideoTimeFocus(String dateTimeData) {
+    // if (pointerCount != 0) return;
     DateTime dateTime = DateTime.parse(dateTimeData.replaceAll('.', '-'));
     int seconds = dateTime.hour * 3600 + dateTime.minute * 60 + dateTime.second;
     double newOffset = _timeInSecondsToScrollOffset(seconds.toDouble());

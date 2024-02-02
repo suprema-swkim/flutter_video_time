@@ -161,17 +161,13 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       }
                     },
                     child: GestureDetector(
-                      onScaleStart: (details) {
-                        if (details.pointerCount == 2) {
-                          // 줌 시작 전 위치 저장
-                          focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
-                        }
-                      },
+                      // onScaleStart: (details) {
+                      //   if (details.pointerCount == 2) {
+                      //     // 줌 시작 전 위치 저장
+                      //     focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
+                      //   }
+                      // },
                       onScaleUpdate: (details) {
-                        // 줌 위치 보정
-                        double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
-                        videoScrollController.jumpTo(newOffset);
-
                         if (details.pointerCount == 2) {
                           /// 핀치줌(가로) 사이즈를 줄일때
                           if (details.scale < 1.0 && scale > minScale) {
@@ -188,11 +184,11 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                           }
                         }
                       },
-                      onScaleEnd: (details) {
-                        // 줌 위치 보정
-                        double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
-                        videoScrollController.jumpTo(newOffset);
-                      },
+                      // onScaleEnd: (details) {
+                      //   // 줌 위치 보정
+                      //   double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
+                      //   videoScrollController.animateTo(newOffset, duration: Durations.extralong1, curve: Curves.easeIn);
+                      // },
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (scrollNotification) {
                           // 스크롤이 끝났을때 감지

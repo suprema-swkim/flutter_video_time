@@ -49,26 +49,27 @@ class SamplePage extends StatelessWidget {
       body: SafeArea(
         child: Container(
           color: Colors.black54,
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                VideoTimeLapse(
-                  key: timeLapseKey,
-                  timeList: timeList,
-                  timeFocusChanged: (value) {
-                    print('현재 시간 : $value');
-                  },
-                  previousCallBack: () {
-                    print('이전 날짜 콜백');
-                  },
-                  nextDateCallBack: () {
-                    print('다음 날짜 콜백');
-                  },
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              VideoTimeLapse(
+                key: timeLapseKey,
+                timeList: timeList,
+                timeFocusChanged: (value) {
+                  print('현재 시간 : $value');
+                },
+                previousCallBack: () {
+                  print('이전 날짜 콜백');
+                },
+                nextDateCallBack: () {
+                  print('다음 날짜 콜백');
+                },
+              ),
+              SizedBox(
+                height: 100,
+              )
+            ],
           ),
         ),
       ),

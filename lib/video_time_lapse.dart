@@ -98,6 +98,12 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   /// 중심 시간 초 데이터
   int focusTimeInSeconds = 0;
 
+  /// 터치 카운트
+  int pointerCount = 0;
+
+  /// 스크롤 가능 여부 알림
+  ValueNotifier<bool> useScrollNotifier = ValueNotifier(true);
+
   @override
   void initState() {
     super.initState();
@@ -141,78 +147,97 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
               height: widget.height,
               child: Stack(
                 children: [
-                  GestureDetector(
-                    onScaleStart: (details) {
-                      if (details.pointerCount == 2) {
-                        // 줌 시작 전 위치 저장
-                        focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
+                  Listener(
+                    onPointerDown: (event) {
+                      pointerCount += 1;
+                      if (pointerCount == 2) {
+                        useScrollNotifier.value = false;
                       }
                     },
-                    onScaleUpdate: (details) {
-                      // 줌 위치 보정
-                      double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
-                      videoScrollController.jumpTo(newOffset);
-
-                      if (details.pointerCount == 2) {
-                        /// 핀치줌(가로) 사이즈를 줄일때
-                        if (details.scale < 1.0 && scale > minScale) {
-                          scale -= 0.5;
-                          widgetSizeNotifier.value = scale / 10;
-                          return;
-                        }
-
-                        /// 핀치줌(가로) 사이즈를 늘릴때
-                        if (details.scale > 1.0 && scale < maxScale) {
-                          scale += 0.5;
-                          widgetSizeNotifier.value = scale / 10;
-                          return;
-                        }
+                    onPointerUp: (event) {
+                      pointerCount -= 1;
+                      if (pointerCount == 1) {
+                        useScrollNotifier.value = true;
                       }
                     },
-                    onScaleEnd: (details) {
-                      // 줌 위치 보정
-                      double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
-                      videoScrollController.jumpTo(newOffset);
-                    },
-                    child: NotificationListener<ScrollNotification>(
-                      onNotification: (scrollNotification) {
-                        // 스크롤이 끝났을때 감지
-                        if (scrollNotification is ScrollEndNotification) {
-                          String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
-                          widget.timeFocusChanged(hhmmss);
+                    child: GestureDetector(
+                      onScaleStart: (details) {
+                        if (details.pointerCount == 2) {
+                          // 줌 시작 전 위치 저장
+                          focusTimeInSeconds = _scrollOffsetToTimeInSeconds();
                         }
-                        return true;
                       },
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        controller: videoScrollController,
-                        padding: EdgeInsets.symmetric(horizontal: (constraints.maxWidth / 2)),
-                        child: Row(
-                          children: List.generate(widget.timeList.length, (index) {
-                            var item = widget.timeList[index];
-                            return ValueListenableBuilder(
-                                valueListenable: widgetSizeNotifier,
-                                builder: (context, value, __) {
-                                  return Stack(
-                                    children: [
-                                      Container(
-                                        width: value,
-                                        color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
-                                      ),
-                                      if (index % 60 == 0) ...[
-                                        _buildTimeLineHand(30)
-                                      ] else if (index % 30 == 0) ...[
-                                        _buildTimeLineHand(20)
-                                      ] else if (index % 10 == 0 && (isZoomLevel2 || isZoomLevel3)) ...[
-                                        _buildTimeLineHand(10)
-                                      ] else if (index % 2 == 0 && isZoomLevel3) ...[
-                                        _buildTimeLineHand(5)
-                                      ]
-                                    ],
-                                  );
-                                });
-                          }),
-                        ),
+                      onScaleUpdate: (details) {
+                        // 줌 위치 보정
+                        double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
+                        videoScrollController.jumpTo(newOffset);
+
+                        if (details.pointerCount == 2) {
+                          /// 핀치줌(가로) 사이즈를 줄일때
+                          if (details.scale < 1.0 && scale > minScale) {
+                            scale -= 0.5;
+                            widgetSizeNotifier.value = scale / 10;
+                            return;
+                          }
+
+                          /// 핀치줌(가로) 사이즈를 늘릴때
+                          if (details.scale > 1.0 && scale < maxScale) {
+                            scale += 0.5;
+                            widgetSizeNotifier.value = scale / 10;
+                            return;
+                          }
+                        }
+                      },
+                      onScaleEnd: (details) {
+                        // 줌 위치 보정
+                        double newOffset = _timeInSecondsToScrollOffset(focusTimeInSeconds.toDouble());
+                        videoScrollController.jumpTo(newOffset);
+                      },
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (scrollNotification) {
+                          // 스크롤이 끝났을때 감지
+                          if (scrollNotification is ScrollEndNotification) {
+                            String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
+                            widget.timeFocusChanged(hhmmss);
+                          }
+                          return true;
+                        },
+                        child: ValueListenableBuilder(
+                            valueListenable: useScrollNotifier,
+                            builder: (context, value, __) {
+                              return SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                controller: videoScrollController,
+                                physics: value ? null : const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.symmetric(horizontal: (constraints.maxWidth / 2)),
+                                child: Row(
+                                  children: List.generate(widget.timeList.length, (index) {
+                                    var item = widget.timeList[index];
+                                    return ValueListenableBuilder(
+                                        valueListenable: widgetSizeNotifier,
+                                        builder: (context, value, __) {
+                                          return Stack(
+                                            children: [
+                                              Container(
+                                                width: value,
+                                                color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                              ),
+                                              if (index % 60 == 0) ...[
+                                                _buildTimeLineHand(30)
+                                              ] else if (index % 30 == 0) ...[
+                                                _buildTimeLineHand(20)
+                                              ] else if (index % 10 == 0 && (isZoomLevel2 || isZoomLevel3)) ...[
+                                                _buildTimeLineHand(10)
+                                              ] else if (index % 2 == 0 && isZoomLevel3) ...[
+                                                _buildTimeLineHand(5)
+                                              ]
+                                            ],
+                                          );
+                                        });
+                                  }),
+                                ),
+                              );
+                            }),
                       ),
                     ),
                   ),

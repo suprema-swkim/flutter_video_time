@@ -63,7 +63,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   late final ScrollController timeScrollController;
 
   /// 스크롤 디바운스(지연시간 1초)
-  final _Debouncer scrollDebouncer = _Debouncer(delay: const Duration(seconds: 1));
+  final Debouncer scrollDebouncer = Debouncer(delay: const Duration(seconds: 1));
 
   /// 스크롤중 여부
   bool isScrolling = false;
@@ -471,11 +471,11 @@ class _TimeLapseFocusHandPainter extends CustomPainter {
   }
 }
 
-class _Debouncer {
+class Debouncer {
   final Duration delay;
   Timer? _timer;
 
-  _Debouncer({required this.delay});
+  Debouncer({required this.delay});
 
   void run(VoidCallback action) {
     _timer?.cancel();

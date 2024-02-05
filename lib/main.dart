@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:async';
 import 'dart:math';
 
@@ -66,7 +68,7 @@ class SamplePage extends StatelessWidget {
                   print('다음 날짜 콜백');
                 },
               ),
-              SizedBox(
+              const SizedBox(
                 height: 100,
               )
             ],

@@ -206,7 +206,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (scrollNotification) {
                           // 스크롤이 끝났을때 감지
-                          if (scrollNotification is ScrollEndNotification) {
+                          if (scrollNotification is ScrollEndNotification && isScrolling) {
                             String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
                             widget.timeFocusChanged(hhmmss);
                           }
@@ -432,7 +432,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
     return '$hoursStr:$minutesStr:$secondsStr';
   }
 
-  /// 시간에 맞는 위치로 이동
+  /// 시간에 맞는 위치로 이동('yyyy.MM.dd HH:mm:ss')
   void moveVideoTimeFocus(String dateTimeData) {
     if (isScrolling) return;
     DateTime dateTime = DateTime.parse(dateTimeData.replaceAll('.', '-'));

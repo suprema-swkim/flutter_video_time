@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class VideoTimeLapse extends StatefulWidget {
@@ -59,6 +61,12 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
 
   /// 시간 스크롤 컨트롤러
   late final ScrollController timeScrollController;
+
+  /// 스크롤 디바운스(지연시간 1초)
+  final _Debouncer scrollDebouncer = _Debouncer(delay: const Duration(seconds: 1));
+
+  /// 스크롤중 여부
+  bool isScrolling = false;
 
   // ------------------------------------------------
 
@@ -159,6 +167,12 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       if (pointerCount == 1) {
                         useScrollNotifier.value = true;
                       }
+                    },
+                    onPointerMove: (event) {
+                      isScrolling = true;
+                      scrollDebouncer.run(() {
+                        isScrolling = false;
+                      });
                     },
                     child: GestureDetector(
                       // onScaleStart: (details) {
@@ -420,7 +434,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
 
   /// 시간에 맞는 위치로 이동
   void moveVideoTimeFocus(String dateTimeData) {
-    // if (pointerCount != 0) return;
+    if (isScrolling) return;
     DateTime dateTime = DateTime.parse(dateTimeData.replaceAll('.', '-'));
     int seconds = dateTime.hour * 3600 + dateTime.minute * 60 + dateTime.second;
     double newOffset = _timeInSecondsToScrollOffset(seconds.toDouble());
@@ -454,5 +468,17 @@ class _TimeLapseFocusHandPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     return false;
+  }
+}
+
+class _Debouncer {
+  final Duration delay;
+  Timer? _timer;
+
+  _Debouncer({required this.delay});
+
+  void run(VoidCallback action) {
+    _timer?.cancel();
+    _timer = Timer(delay, action);
   }
 }

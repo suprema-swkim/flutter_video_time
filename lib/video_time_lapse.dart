@@ -292,6 +292,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                 } else if (isZoomLevel2) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
+                    physics: const NeverScrollableScrollPhysics(),
                     scrollDirection: Axis.horizontal,
                     child: Container(
                       width: (widget.timeList.length * value) + constraints.maxWidth,
@@ -320,6 +321,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                 } else if (isZoomLevel3) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
+                    physics: const NeverScrollableScrollPhysics(),
                     scrollDirection: Axis.horizontal,
                     child: Container(
                       width: (widget.timeList.length * value) + constraints.maxWidth,

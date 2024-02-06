@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-GlobalKey<VideoTimeLapseState> timeLapseKey = GlobalKey();
+GlobalKey<VideoTimeLapsState> timeLapseKey = GlobalKey();
 DateTime sampleDateTime = DateTime.parse('2023.01.07 13:39:22'.replaceAll('.', '-'));
 
 Timer? myTimer;
@@ -55,7 +55,7 @@ class SamplePage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              VideoTimeLapse(
+              VideoTimeLaps(
                 key: timeLapseKey,
                 timeList: timeList,
                 timeFocusChanged: (value) {

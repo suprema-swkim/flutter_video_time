@@ -86,10 +86,10 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   final double zoomLevel1Scale = 1; // 1 hour
 
   /// 줌 레벨2 스케일
-  final double zoomLevel2Scale = 1.5; // 30 min
+  final double zoomLevel2Scale = 2; // 30 min
 
   /// 줌 레벨3 스케일
-  final double zoomLevel3Scale = 2; // 10 min
+  final double zoomLevel3Scale = 3; // 10 min
 
   // ------------------------------------------------
 
@@ -101,8 +101,11 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   /// 중심 시간 초 데이터
   int focusTimeInSeconds = 0;
 
-  /// touch counter
-  int pointCounter = 0;
+  /// 터치 카운트
+  int pointerCount = 0;
+
+  /// 스크롤 가능 여부 알림
+  ValueNotifier<bool> useScrollNotifier = ValueNotifier(true);
 
   /// scroll original dx
   double sdx = 0;
@@ -151,33 +154,50 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
               child: Stack(
                 children: [
                   Listener(
-                    onPointerUp: (detail) {
-                      pointCounter--;
+                    onPointerDown: (event) {
+                      pointerCount += 1;
+                      if (pointerCount == 2) {
+                        useScrollNotifier.value = false;
+                      }
                     },
-                    onPointerDown: (detail) {
-                      pointCounter++;
+                    onPointerUp: (event) {
+                      pointerCount -= 1;
+                      if (pointerCount == 1) {
+                        useScrollNotifier.value = true;
+                      }
                     },
-                    child: GestureDetector(
-                      onScaleStart: (details) {
+                    onPointerMove: (event) {
+                      isScrolling = true;
+                      scrollDebouncer.run(() {
+                        isScrolling = false;
+                      });
+                    },
+                    child: InteractiveViewer(
+                      minScale: zoomLevel1Scale,
+                      maxScale: zoomLevel3Scale,
+                      onInteractionStart: (details) {
                         sdx = videoScrollController.position.pixels / scale;
                       },
-                      onScaleUpdate: (details) {
+                      onInteractionUpdate: (details) {
                         if (details.pointerCount == 2) {
                           /// 핀치줌(가로) 사이즈를 줄일때
                           if (details.scale < 1.0 && scale > zoomLevel1Scale) {
-                            scale -= 0.05;
+                            scale += (details.scale - 1) / 50;
+                            if (scale < zoomLevel1Scale) scale = zoomLevel1Scale;
                             videoScrollController.jumpTo(sdx * scale);
                             return;
                           }
 
                           /// 핀치줌(가로) 사이즈를 늘릴때
                           if (details.scale > 1.0 && scale < zoomLevel3Scale) {
-                            scale += 0.05;
+                            scale += (details.scale - 1) / 50;
+                            if (scale > zoomLevel3Scale) scale = zoomLevel3Scale;
                             videoScrollController.jumpTo(sdx * scale);
                             return;
                           }
                         }
                       },
+                      scaleEnabled: false,
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (scrollNotification) {
                           // 스크롤이 끝났을때 감지
@@ -187,43 +207,48 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                           }
                           return true;
                         },
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          controller: videoScrollController,
-                          padding: EdgeInsets.symmetric(horizontal: (constraints.maxWidth / 2)),
-                          child: Row(
-                            children: List.generate(widget.timeList.length, (index) {
-                              var item = widget.timeList[index];
-                              return ValueListenableBuilder(
-                                  valueListenable: widgetSizeNotifier,
-                                  builder: (context, value, __) {
-                                    return Stack(
-                                      children: [
-                                        Container(
-                                          width: value * 4.5,
-                                          decoration: BoxDecoration(
-                                            color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
-                                            border: Border.all(
-                                              width: 0,
-                                              color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
-                                            ),
-                                          ),
-                                        ),
-                                        if (index % 60 == 0) ...[
-                                          _buildTimeLineHand(30)
-                                        ] else if (index % 30 == 0) ...[
-                                          _buildTimeLineHand(20)
-                                        ] else if (index % 10 == 0) ...[
-                                          _buildTimeLineHand(10)
-                                        ] else if (index % 2 == 0) ...[
-                                          _buildTimeLineHand(5)
-                                        ]
-                                      ],
-                                    );
-                                  });
+                        child: ValueListenableBuilder(
+                            valueListenable: useScrollNotifier,
+                            builder: (context, value, _) {
+                              return SingleChildScrollView(
+                                physics: value ? null : const NeverScrollableScrollPhysics(),
+                                scrollDirection: Axis.horizontal,
+                                controller: videoScrollController,
+                                padding: EdgeInsets.symmetric(horizontal: (constraints.maxWidth / 2)),
+                                child: Row(
+                                  children: List.generate(widget.timeList.length, (index) {
+                                    var item = widget.timeList[index];
+                                    return ValueListenableBuilder(
+                                        valueListenable: widgetSizeNotifier,
+                                        builder: (context, value, __) {
+                                          return Stack(
+                                            children: [
+                                              Container(
+                                                width: value * 4.5,
+                                                decoration: BoxDecoration(
+                                                  color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                                  border: Border.all(
+                                                    width: 0,
+                                                    color: item ? widget.timeLineColor : widget.timeLineBackgroundColor,
+                                                  ),
+                                                ),
+                                              ),
+                                              if (index % 60 == 0) ...[
+                                                _buildTimeLineHand(30)
+                                              ] else if (index % 30 == 0) ...[
+                                                _buildTimeLineHand(20)
+                                              ] else if (index % 10 == 0) ...[
+                                                _buildTimeLineHand(10)
+                                              ] else if (index % 2 == 0) ...[
+                                                _buildTimeLineHand(5)
+                                              ]
+                                            ],
+                                          );
+                                        });
+                                  }),
+                                ),
+                              );
                             }),
-                          ),
-                        ),
                       ),
                     ),
                   ),
@@ -247,7 +272,8 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
               valueListenable: widgetSizeNotifier,
               builder: (context, value, _) {
                 value = value * 4.5;
-                if (scale <= 1.25) {
+                print('### $scale');
+                if (scale >= zoomLevel1Scale && scale < zoomLevel2Scale * 0.75) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
                     physics: const NeverScrollableScrollPhysics(),
@@ -274,7 +300,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       ),
                     ),
                   );
-                } else if (scale > 1.25 && scale < 1.75) {
+                } else if (scale > zoomLevel2Scale * 0.75 && scale < zoomLevel3Scale * 0.75) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
                     physics: const NeverScrollableScrollPhysics(),
@@ -303,7 +329,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       ),
                     ),
                   );
-                } else if (scale >= 1.75) {
+                } else if (scale >= zoomLevel3Scale * 0.75) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
                     physics: const NeverScrollableScrollPhysics(),

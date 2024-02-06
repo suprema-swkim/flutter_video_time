@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-class VideoTimeLaps extends StatefulWidget {
-  const VideoTimeLaps({
+class VideoTimeLapse extends StatefulWidget {
+  const VideoTimeLapse({
     Key? key,
     this.height = 80,
     required this.timeList,
@@ -56,10 +56,10 @@ class VideoTimeLaps extends StatefulWidget {
   final Color focusBackgroundColor;
 
   @override
-  State<VideoTimeLaps> createState() => VideoTimeLapsState();
+  State<VideoTimeLapse> createState() => VideoTimeLapseState();
 }
 
-class VideoTimeLapsState extends State<VideoTimeLaps> {
+class VideoTimeLapseState extends State<VideoTimeLapse> {
   /// 비디오 스크롤 컨트롤러
   late final ScrollController videoScrollController;
 

@@ -67,7 +67,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
   late final ScrollController timeScrollController;
 
   /// 스크롤 디바운스(지연시간 1초)
-  final Debouncer scrollDebouncer = Debouncer(delay: const Duration(seconds: 1));
+  final Debouncer scrollDebouncer = Debouncer(delay: const Duration(milliseconds: 1500));
 
   /// 스크롤중 여부
   bool isScrolling = false;
@@ -121,6 +121,10 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
     videoScrollController = ScrollController();
     timeScrollController = ScrollController();
     videoScrollController.addListener(() {
+      if (pointerCount == 1) {
+        isScrolling = true;
+      }
+
       /// 스크롤 동기화
       timeScrollController.jumpTo(videoScrollController.offset);
 
@@ -170,12 +174,6 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                         useScrollNotifier.value = true;
                       }
                     },
-                    onPointerMove: (event) {
-                      isScrolling = true;
-                      scrollDebouncer.run(() {
-                        isScrolling = false;
-                      });
-                    },
                     child: InteractiveViewer(
                       minScale: zoomLevel1Scale,
                       maxScale: zoomLevel3Scale,
@@ -205,9 +203,12 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       child: NotificationListener<ScrollNotification>(
                         onNotification: (scrollNotification) {
                           // 스크롤이 끝났을때 감지
-                          if (scrollNotification is ScrollEndNotification && isScrolling) {
-                            String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
-                            widget.timeFocusChanged(hhmmss);
+                          if (scrollNotification is ScrollEndNotification && isScrolling && pointerCount == 0) {
+                            scrollDebouncer.run(() {
+                              String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
+                              widget.timeFocusChanged(hhmmss);
+                              isScrolling = false;
+                            });
                           }
                           return true;
                         },
@@ -276,7 +277,6 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
               valueListenable: widgetSizeNotifier,
               builder: (context, value, _) {
                 value = value * 4.5;
-                print('### $scale');
                 if (scale >= zoomLevel1Scale && scale < zoomLevel2Scale * 0.75) {
                   return SingleChildScrollView(
                     controller: timeScrollController,
@@ -435,7 +435,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
 
   /// 시간에 맞는 위치로 이동('yyyy.MM.dd HH:mm:ss')
   void moveVideoTimeFocus(String dateTimeData) {
-    if (isScrolling) return;
+    if (isScrolling || pointerCount > 0) return;
     DateTime dateTime = DateTime.parse(dateTimeData.replaceAll('.', '-'));
     int seconds = dateTime.hour * 3600 + dateTime.minute * 60 + dateTime.second;
     double newOffset = _timeInSecondsToScrollOffset(seconds.toDouble());

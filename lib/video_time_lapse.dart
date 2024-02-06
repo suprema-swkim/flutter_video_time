@@ -11,11 +11,12 @@ class VideoTimeLapse extends StatefulWidget {
     required this.previousCallBack,
     required this.nextDateCallBack,
     this.timeLineExteriorColor = Colors.grey,
-    this.timeLineColor = Colors.lightBlueAccent,
+    this.timeLineColor = const Color(0xFFCDD8FE),
     this.timeLineBackgroundColor = Colors.white,
-    this.focusAndTimeTextBackgroundColor = Colors.red,
     this.timeLineHandColor = Colors.black,
     this.timeTextColor = Colors.white,
+    this.timeTextBackgroundColor = Colors.black,
+    this.focusBackgroundColor = const Color(0xFF6682FF),
   }) : super(key: key);
 
   /// 높이
@@ -48,8 +49,11 @@ class VideoTimeLapse extends StatefulWidget {
   /// 시간 텍스트 색상
   final Color timeTextColor;
 
-  /// 표적 및 시간 텍스트 배경 색상
-  final Color focusAndTimeTextBackgroundColor;
+  /// 시간 텍스트 배경 색상
+  final Color timeTextBackgroundColor;
+
+  /// 표적 배경 색상
+  final Color focusBackgroundColor;
 
   @override
   State<VideoTimeLapse> createState() => VideoTimeLapseState();
@@ -258,7 +262,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                         child: SizedBox(
                           width: 20,
                           child: CustomPaint(
-                            painter: _TimeLapseFocusHandPainter(widget.focusAndTimeTextBackgroundColor),
+                            painter: _TimeLapseFocusHandPainter(widget.focusBackgroundColor),
                             child: const Center(),
                           ),
                         ),
@@ -281,7 +285,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                     child: Container(
                       width: (widget.timeList.length * value) + constraints.maxWidth,
                       height: 20,
-                      color: widget.focusAndTimeTextBackgroundColor,
+                      color: widget.timeTextBackgroundColor,
                       child: Stack(
                         children: List.generate(24, (index) {
                           final hour = index;
@@ -308,7 +312,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                     child: Container(
                       width: (widget.timeList.length * value) + constraints.maxWidth,
                       height: 20,
-                      color: widget.focusAndTimeTextBackgroundColor,
+                      color: widget.timeTextBackgroundColor,
                       child: Stack(
                         children: List.generate(48, (index) {
                           final isEvenIndex = index % 2 == 0;
@@ -337,7 +341,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                     child: Container(
                       width: (widget.timeList.length * value) + constraints.maxWidth,
                       height: 20,
-                      color: widget.focusAndTimeTextBackgroundColor,
+                      color: widget.timeTextBackgroundColor,
                       child: Stack(
                         children: List.generate(144, (index) {
                           final hour = index ~/ 6;

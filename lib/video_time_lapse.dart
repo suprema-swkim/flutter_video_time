@@ -294,7 +294,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       height: 20,
                       color: widget.timeTextBackgroundColor,
                       child: Stack(
-                        children: List.generate(24, (index) {
+                        children: List.generate(25, (index) {
                           final hour = index;
 
                           return Positioned(
@@ -321,7 +321,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       height: 20,
                       color: widget.timeTextBackgroundColor,
                       child: Stack(
-                        children: List.generate(48, (index) {
+                        children: List.generate(49, (index) {
                           final isEvenIndex = index % 2 == 0;
                           final minute = isEvenIndex ? '00' : '30';
                           final hour = index ~/ 2;
@@ -350,7 +350,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                       height: 20,
                       color: widget.timeTextBackgroundColor,
                       child: Stack(
-                        children: List.generate(144, (index) {
+                        children: List.generate(145, (index) {
                           final hour = index ~/ 6;
                           final minute = (index % 6) * 10;
 

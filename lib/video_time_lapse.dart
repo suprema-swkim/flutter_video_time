@@ -207,7 +207,7 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                             if (videoScrollController.offset == 0 ||
                                 videoScrollController.offset.toInt() == videoScrollController.position.maxScrollExtent.toInt()) {
                               scrollDebouncer.cancel();
-                              isScrolling = false;
+                              Future.delayed(Durations.extralong4).then((value) => isScrolling = false);
                             } else {
                               scrollDebouncer.run(() async {
                                 String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());

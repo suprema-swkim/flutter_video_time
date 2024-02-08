@@ -204,12 +204,18 @@ class VideoTimeLapseState extends State<VideoTimeLapse> {
                         onNotification: (scrollNotification) {
                           // 스크롤이 끝났을때 감지
                           if (scrollNotification is ScrollEndNotification && isScrolling && pointerCount == 0) {
-                            scrollDebouncer.run(() async {
-                              String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
-                              widget.timeFocusChanged(hhmmss);
-                              await Future.delayed(Durations.long2);
+                            if (videoScrollController.offset == 0 ||
+                                videoScrollController.offset.toInt() == videoScrollController.position.maxScrollExtent.toInt()) {
+                              scrollDebouncer.cancel();
                               isScrolling = false;
-                            });
+                            } else {
+                              scrollDebouncer.run(() async {
+                                String hhmmss = _formatSecondsToHHMMSS(_scrollOffsetToTimeInSeconds());
+                                widget.timeFocusChanged(hhmmss);
+                                await Future.delayed(Durations.long2);
+                                isScrolling = false;
+                              });
+                            }
                           }
                           return true;
                         },
@@ -482,5 +488,9 @@ class Debouncer {
   void run(VoidCallback action) {
     _timer?.cancel();
     _timer = Timer(delay, action);
+  }
+
+  void cancel() {
+    _timer?.cancel();
   }
 }
